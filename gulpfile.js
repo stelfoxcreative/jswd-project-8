@@ -5,7 +5,8 @@ const gulp = require('gulp'),
     cleanCSS = require('gulp-clean-css'),
     sourcemaps = require('gulp-sourcemaps'),
     imagemin = require('gulp-imagemin'),
-    del = require('del');
+    del = require('del'),
+    server = require('gulp-server-livereload');
      
 gulp.task('images', () =>
     gulp.src('./images/*')
@@ -27,18 +28,13 @@ gulp.task('scripts', function() {
     .pipe(gulp.dest('./dist/scripts'));
 });
 
-gulp.task('watch', function() {
-    gulp.watch('sass', ['styles']);
-});
-
-var source = './sass/**/*.scss';
-
 gulp.task('styles', function() {
-    return gulp.src(source)
+    return gulp.src('./sass/**/*.scss')
     .pipe(concat('all.min.css'))    
     .pipe(sourcemaps.init())
         .pipe(sass())
-    .pipe(sass.sync().on('error', sass.logError))
+        // .pipe(sass.sync().on('error', sass.logError))
+        .pipe(cleanCSS())
     .pipe(sourcemaps.write('./'))      
     .pipe(gulp.dest('./dist/styles'));
 });
@@ -51,8 +47,16 @@ gulp.task('clean', function() {
   return del(['dist/**/*']);
 });
 
-gulp.task('build', ['clean'], function() {
-    gulp.start(['styles', 'scripts', 'images', 'sass:watch']);
+gulp.task('webserver', function() {
+    gulp.src('./')
+    .pipe(server({
+        livereload: true,
+        open: true
+    }));
 });
 
-gulp.task('default', ['build']);
+gulp.task('build', ['clean'], function() {
+    gulp.start(['styles', 'scripts', 'images']);
+});
+
+gulp.task('default', ['build', 'webserver', 'sass:watch']);
